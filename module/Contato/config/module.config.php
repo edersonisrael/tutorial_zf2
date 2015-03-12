@@ -4,7 +4,8 @@ return array(
     # definir e gerenciar controllers
     'controllers' => array(
         'invokables' => array(
-            'HomeController' => 'Contato\Controller\HomeController'
+            'HomeController' => 'Contato\Controller\HomeController',
+            'ContatosController' => 'Contato\Controller\ContatosController',
         ),
     ),
  
@@ -17,6 +18,32 @@ return array(
                     'route'    => '/',
                     'defaults' => array(
                         'controller' => 'HomeController',
+                        'action'     => 'index',
+                    ),
+                ),
+            ),
+            # literal para action sobre home
+        'sobre' => array(
+            'type'      => 'Literal',
+            'options'   => array(
+                'route'    => '/sobre',
+                'defaults' => array(
+                    'controller' => 'HomeController',
+                    'action'     => 'sobre',
+                ),
+            ),
+        ),
+            
+            'contatos' => array(
+                'type'      => 'Segment',
+                'options'   => array(
+                        'route'    => '/contatos[/:action][/:id]',
+                        'constraints' => array(
+                            'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                             'id'     => '[0-9]+',
+                        ),
+                    'defaults' => array(
+                        'controller' => 'ContatosController',
                         'action'     => 'index',
                     ),
                 ),
@@ -48,4 +75,4 @@ return array(
             __DIR__ . '/../view',
         ),
     ),
-  );
+);
