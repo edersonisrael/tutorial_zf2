@@ -122,42 +122,69 @@ class ContatoTable
  * @return type Paginator
  */
 public function fetchPaginator($pagina = 1, $itensPagina = 10, $ordem = 'nome ASC', $like = null, $itensPaginacao = 5) 
-{
-    // preparar um select para tabela contato com uma ordem
-    $select = (new Select('contatos'))->order($ordem);
-    
-    if (isset($like)) {
-        $select
-                ->where
-                ->like('id', "%{$like}%")
-                ->or
-                ->like('nome', "%{$like}%")
-                ->or
-                ->like('telefone_principal', "%{$like}%")
-                ->or
-                ->like('data_criacao', "%{$like}%")
-        ;
+    {
+        // preparar um select para tabela contato com uma ordem
+        $select = (new Select('contatos'))->order($ordem);
+
+        if (isset($like)) {
+            $select
+                    ->where
+                    ->like('id', "%{$like}%")
+                    ->or
+                    ->like('nome', "%{$like}%")
+                    ->or
+                    ->like('telefone_principal', "%{$like}%")
+                    ->or
+                    ->like('data_criacao', "%{$like}%")
+            ;
+        }
+
+        // criar um objeto com a estrutura desejada para armazenar valores
+        $resultSet = new HydratingResultSet(new Reflection(), new Contato());
+
+        // criar um objeto adapter paginator
+        $paginatorAdapter = new DbSelect(
+            // nosso objeto select
+            $select,
+            // nosso adapter da tabela
+            $this->tableGateway->getAdapter(),
+            // nosso objeto base para ser populado
+            $resultSet
+        );
+
+        // resultado da paginação
+        return (new Paginator($paginatorAdapter))
+                // pagina a ser buscada
+                ->setCurrentPageNumber((int) $pagina)
+                // quantidade de itens na página
+                ->setItemCountPerPage((int) $itensPagina)
+                ->setPageRange((int) $itensPaginacao);
     }
-    
-    // criar um objeto com a estrutura desejada para armazenar valores
-    $resultSet = new HydratingResultSet(new Reflection(), new Contato());
-    
-    // criar um objeto adapter paginator
-    $paginatorAdapter = new DbSelect(
-        // nosso objeto select
-        $select,
-        // nosso adapter da tabela
-        $this->tableGateway->getAdapter(),
-        // nosso objeto base para ser populado
-        $resultSet
-    );
-    
-    // resultado da paginação
-    return (new Paginator($paginatorAdapter))
-            // pagina a ser buscada
-            ->setCurrentPageNumber((int) $pagina)
-            // quantidade de itens na página
-            ->setItemCountPerPage((int) $itensPagina)
-            ->setPageRange((int) $itensPaginacao);
-}
+
+        /**
+     * Localizar contatos pelo nome
+     * 
+     * @param type $nome
+     * @return type Array
+     */
+public function search($nome)
+    {
+        // preparar objeto SQL
+        $adapter = $this->tableGateway->getAdapter();
+        $sql     = new \Zend\Db\Sql\Sql($adapter);
+
+        // montagem do select com where, like e limit para tabela contatos
+        $select = (new Select('contatos'))->limit(8);
+        $select
+                ->columns(array('id', 'nome'))
+                ->where
+                ->like('nome', "%{$nome}%")
+        ;
+
+        // executar select
+        $statement = $sql->getSqlStringForSqlObject($select);
+        $results   = $adapter->query($statement, $adapter::QUERY_MODE_EXECUTE);
+
+        return $results;
+    }
 }
